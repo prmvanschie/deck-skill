@@ -83,7 +83,7 @@ Every new slide reuses the established system and obeys the house rules automati
 Don't save it all for the end. On each new/changed slide, apply `references/anti-slop-checklist.md` (house rules + slop), stop-slop the prose (zero em dashes in sentences; invoke the `stop-slop` skill if available), and screenshot-verify non-trivial layouts (`scripts/export-pdf.sh` render or Preview/Playwright — check 16:9, overflow, overlap, contrast). Run the deeper `references/critique.md` pass on request or before a big share.
 
 ### 5. Deliver anytime
-The deck is always live: `open` it whenever. It ships with the design/edit panel (fonts, accent, text size; click any text to edit; autosaves), presenter mode (`S`), **top-to-bottom navigation** (scroll or ↓/↑; a dot-column on the right shows position), and print. Offer **PDF export** (`references/pdf-export.md` / `scripts/export-pdf.sh`) whenever the user wants a file. Clean up `.deck/previews/` if style discovery created any.
+The deck is always live: `open` it whenever. It ships with the edit mode (fonts, accent, text size; click any text to edit; undo/redo; autosave; **Save** writes the whole deck with every edit into one HTML file, Cmd/Ctrl+S), presenter mode (`S`), **top-to-bottom navigation** (scroll or ↓/↑; a dot-column on the right shows position), and print. Offer **PDF export** (`references/pdf-export.md` / `scripts/export-pdf.sh`) whenever the user wants a file. Clean up `.deck/previews/` if style discovery created any.
 
 ---
 
@@ -104,7 +104,7 @@ When you detect a complex topic to *explain*, switch to `references/explainer.md
 | File | Read when |
 |------|-----------|
 | `references/viewport-base.css` | Steps 2 and 3, build — include its full contents in every deck |
-| `references/scaffold.html` | Steps 2 and 3, build — the single-file shell (stage, nav, design panel, autosave, presenter, print) |
+| `references/scaffold.html` | Steps 2 and 3, build — the single-file shell (stage, nav, edit mode, presenter, print). Copy the blocks marked EDITOR unchanged into every deck; give each deck its own `SAVE_KEY` |
 | `references/explainer.md` | Explainer mode — decompose a hard topic into a storyline-first, one-point-per-slide storyboard (approval gate before building) |
 | `references/narrative.md` | Step 3, co-build — deck structures + copy formulas (ledes stripped) |
 | `references/style-discovery.md` | Step 2, sample slides — the 3-direction "show, don't tell" flow |

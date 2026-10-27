@@ -11,7 +11,7 @@ You know the look: a small label in spaced-out capitals above every title, every
 - **Slides built with you.** The skill makes a cover and two or three sample slides first. After you approve the look, you grow the deck together, a few slides at a time.
 - **Explainer mode for hard topics.** When the job is to explain something complex, the skill writes a storyboard with one point per slide and waits for your approval before it builds.
 - **A fixed 16:9 stage.** You author every slide at 1920×1080 and the deck scales as a whole, so the PDF matches the screen.
-- **Presenter mode, a live edit panel and PDF export.** Press `S` for presenter mode. Press Edit, then click any text to change it; changes save automatically.
+- **Presenter mode, an edit mode and PDF export.** Press `S` for presenter mode. Press Edit to change text, fonts, text size and accent, with undo and redo. Save writes the whole deck, edits included, to one HTML file you can send.
 
 ## The house rules
 
