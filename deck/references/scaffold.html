@@ -89,6 +89,11 @@ em { font-family: var(--font-display); font-style: italic; font-weight: 600; col
 .li::before { content: "—"; font-family: var(--font-mono); color: var(--accent); }
 .li .t { font-family: var(--font-display); font-weight: 600; font-size: calc(34px * var(--scale)); color: inherit; }
 
+/* two columns of comparable content */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; margin-top: 48px; }
+.cols h3 { font-family: var(--font-display); font-weight: 700; font-size: calc(46px * var(--scale)); }
+.cols p { margin-top: 16px; }
+
 /* edit-mode affordance */
 .ed { border-radius: 5px; outline: none; transition: box-shadow .15s, background .15s; }
 body.editing .ed { box-shadow: 0 0 0 1.5px var(--accent-soft); background: var(--accent-soft); cursor: text; }
@@ -136,6 +141,19 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
 .deck-pbtns button.primary.dirty::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 8px;
     border-radius: 50%; background: var(--accent); vertical-align: middle; }
 .deck-hint { font-size: 12px; line-height: 1.5; color: var(--mute); margin-top: 10px; }
+.deck-pos { font-size: 13px; color: var(--ink-2); margin: 0 0 10px; }
+.deck-addrow { display: flex; gap: 8px; }
+.deck-addrow select { flex: 1; }
+.deck-addrow button, .deck-panel textarea { font-family: var(--font-body); }
+.deck-addrow button { font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--ink); background: var(--ink); color: #fff; }
+.deck-panel textarea { width: 100%; font-size: 13px; line-height: 1.5; padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 10px; resize: vertical; background: #fff; color: var(--ink); }
+/* hidden slides: dimmed while editing, skipped in the show, left out of print and PDF */
+body.editing .slide.deck-hidden.active { opacity: .45 !important; }
+.deck-chrome .dot.hid { opacity: .35; }
+body:not(.editing) .deck-chrome .dot.hid { display: none; }
+@media print { .slide.deck-hidden { display: none !important; } }
 /* while editing, the slide shrinks to the space left of the panel */
 body.editing .deck-viewport { right: 300px; }
 body.editing .deck-chrome { right: 330px; }
@@ -156,6 +174,15 @@ body.editing .deck-chrome { right: 330px; }
     <div class="deck-pbtns"><button id="deckUndo" title="Undo (Cmd/Ctrl+Z)" disabled>Undo</button><button id="deckRedo" title="Redo (Cmd/Ctrl+Shift+Z)" disabled>Redo</button></div>
     <div class="deck-pbtns"><button id="deckSave" class="primary" title="Save as HTML file (Cmd/Ctrl+S)">Save</button><button id="deckReset" title="Throw away unsaved edits">Reset</button></div>
     <p class="deck-hint">Save writes the whole deck, edits included, to an HTML file you can send.</p>
+    <h4>Slide</h4>
+    <p class="deck-pos" id="deckSlidePos">Slide 1 of 1</p>
+    <div class="deck-pbtns"><button id="deckSlideUp">Move up</button><button id="deckSlideDown">Move down</button></div>
+    <div class="deck-pbtns"><button id="deckSlideDup">Duplicate</button><button id="deckSlideDel">Delete</button></div>
+    <div class="deck-pbtns"><button id="deckSlideHide">Hide</button><button id="deckSlideDark">Dark</button></div>
+    <div class="field" style="margin-top:16px"><label for="deckLayout">New slide after this one</label>
+        <div class="deck-addrow"><select id="deckLayout"></select><button id="deckSlideAdd">Add</button></div></div>
+    <div class="field"><label for="deckNotes">Speaker notes</label>
+        <textarea id="deckNotes" rows="5" placeholder="What you say over this slide"></textarea></div>
     <h4>Typography</h4>
     <div class="field"><label>Display font</label>
         <select id="deckFDisplay">
@@ -211,6 +238,39 @@ body.editing .deck-chrome { right: 330px; }
     </main>
 </div>
 
+<!-- SLIDE LAYOUTS for "New slide" in edit mode. When building a deck, replace these with
+     the deck's own slide types (same classes and structure as the real slides). -->
+<template id="deckLayouts">
+    <section class="slide dark center" data-layout="title" data-name="Title">
+        <h1 class="display reveal ed" contenteditable="false">Deck title</h1>
+    </section>
+    <section class="slide center" data-layout="statement" data-name="Statement">
+        <h2 class="display reveal ed" contenteditable="false" style="max-width:18ch">One sentence that <em>lands</em>.</h2>
+    </section>
+    <section class="slide" data-layout="bullets" data-name="Headline and points">
+        <h2 class="h2 reveal ed" contenteditable="false">A headline that carries the slide</h2>
+        <div class="slide-body">
+            <div class="list">
+                <div class="li reveal"><span class="t ed" contenteditable="false">First point</span></div>
+                <div class="li reveal"><span class="t ed" contenteditable="false">Second point</span></div>
+                <div class="li reveal"><span class="t ed" contenteditable="false">Third point</span></div>
+            </div>
+        </div>
+    </section>
+    <section class="slide" data-layout="two-columns" data-name="Two columns">
+        <h2 class="h2 reveal ed" contenteditable="false">Two sides of it</h2>
+        <div class="slide-body">
+            <div class="cols">
+                <div class="reveal"><h3 class="ed" contenteditable="false">Left</h3><p class="ed" contenteditable="false">What sits on this side.</p></div>
+                <div class="reveal"><h3 class="ed" contenteditable="false">Right</h3><p class="ed" contenteditable="false">What sits on the other side.</p></div>
+            </div>
+        </div>
+    </section>
+    <section class="slide dark center" data-layout="divider" data-name="Chapter divider">
+        <h2 class="display reveal ed" contenteditable="false">Next chapter</h2>
+    </section>
+</template>
+
 <div class="deck-chrome" id="deckDots"></div>
 <div class="deck-tip">scroll or ↓ ↑ to move · <b>S</b> presenter · <b>Edit</b> to change</div>
 
@@ -264,7 +324,7 @@ body.editing .deck-chrome { right: 330px; }
         slides = [].slice.call(stage.querySelectorAll('.slide'));
         dotsWrap.innerHTML = ''; dots = [];
         slides.forEach(function (s, idx) {
-            var b = document.createElement('button'); b.className = 'dot';
+            var b = document.createElement('button'); b.className = 'dot' + (s.classList.contains('deck-hidden') ? ' hid' : '');
             b.addEventListener('click', function () { go(idx, 'click'); });
             dotsWrap.appendChild(b); dots.push(b);
         });
@@ -279,6 +339,16 @@ body.editing .deck-chrome { right: 330px; }
         });
         dots.forEach(function (d, idx) { d.classList.toggle('on', idx === i); });
         if (bc && reason !== 'remote' && reason !== 'restore') bc.postMessage({ type: 'go', idx: i });
+        updateSlideUI();
+    }
+    // the show skips hidden slides; edit mode visits every slide
+    function shown(idx) { return document.body.classList.contains('editing') || !slides[idx].classList.contains('deck-hidden'); }
+    function step(d) {
+        for (var j = i + d; j >= 0 && j < slides.length; j += d) { if (shown(j)) { go(j); return; } }
+    }
+    function edge(d) {
+        var j = d > 0 ? slides.length - 1 : 0;
+        for (; j >= 0 && j < slides.length; j -= d) { if (shown(j)) { go(j); return; } }
     }
     if (bc) bc.onmessage = function (e) { if (e.data && e.data.type === 'go') go(e.data.idx, 'remote'); };
     refreshSlides();
@@ -299,23 +369,23 @@ body.editing .deck-chrome { right: 330px; }
         if (e.metaKey || e.ctrlKey || e.altKey) return;
         if (e.target && e.target.closest && e.target.closest('.deck-panel')) return;
         var k = e.key;
-        if (k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(i + 1); }
-        else if (k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(i - 1); }
-        else if (k === 'Home') go(0);
-        else if (k === 'End') go(slides.length - 1);
+        if (k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); step(1); }
+        else if (k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); step(-1); }
+        else if (k === 'Home') edge(-1);
+        else if (k === 'End') edge(1);
         else if (k === 's' || k === 'S') openPresenter();
     });
     document.addEventListener('click', function (e) {
         if (document.body.classList.contains('editing')) return;
         if (e.target.closest('.deck-chrome,.deck-editbtn,.deck-panel,.deck-tip')) return;
-        go(i + 1);
+        step(1);
     });
     // top-to-bottom scroll navigation
     var wheelLock = false;
     document.addEventListener('wheel', function (e) {
         if (document.body.classList.contains('editing')) return;
         if (Math.abs(e.deltaY) < 14 || wheelLock) return;
-        wheelLock = true; go(i + (e.deltaY > 0 ? 1 : -1));
+        wheelLock = true; step(e.deltaY > 0 ? 1 : -1);
         setTimeout(function () { wheelLock = false; }, 650);
     }, { passive: true });
 
@@ -345,6 +415,18 @@ body.editing .deck-chrome { right: 330px; }
         [].forEach.call(c.querySelectorAll('.slide'), function (el) { el.classList.remove('active', 'visible'); });
         return c.innerHTML;
     }
+    function updateSlideUI() {
+        var pos = document.getElementById('deckSlidePos'); if (!pos || !slides.length) return;
+        var s = slides[i], hidden = s.classList.contains('deck-hidden');
+        pos.textContent = 'Slide ' + (i + 1) + ' of ' + slides.length + (hidden ? ' (hidden)' : '');
+        document.getElementById('deckSlideUp').disabled = i === 0;
+        document.getElementById('deckSlideDown').disabled = i === slides.length - 1;
+        document.getElementById('deckSlideDel').disabled = slides.length < 2;
+        document.getElementById('deckSlideHide').textContent = hidden ? 'Show' : 'Hide';
+        document.getElementById('deckSlideDark').textContent = s.classList.contains('dark') ? 'Light' : 'Dark';
+        var nb = document.getElementById('deckNotes');
+        if (nb && document.activeElement !== nb) { var n = s.querySelector('aside.notes'); nb.value = n ? n.textContent.trim() : ''; }
+    }
     function setEditable(on) {
         [].forEach.call(stage.querySelectorAll('.ed'), function (el) { el.setAttribute('contenteditable', on ? 'true' : 'false'); });
     }
@@ -353,8 +435,8 @@ body.editing .deck-chrome { right: 330px; }
     }
 
     // history: one entry per committed change (design pick, or a text edit on blur / after 600 ms idle)
-    var hist = [], hpos = -1, HIST_MAX = 100, dirty = false, typingTimer = null, scaleTimer = null;
-    function snapshot() { return { html: cleanStageHTML(), design: Object.assign({}, design) }; }
+    var hist = [], hpos = -1, HIST_MAX = 100, dirty = false, typingTimer = null, scaleTimer = null, notesTimer = null;
+    function snapshot() { return { html: cleanStageHTML(), design: Object.assign({}, design), cur: i }; }
     function same(a, b) { return a && b && a.html === b.html && JSON.stringify(a.design) === JSON.stringify(b.design); }
     function updateHistoryUI() {
         undoBtn.disabled = hpos <= 0;
@@ -373,7 +455,7 @@ body.editing .deck-chrome { right: 330px; }
     function restore(s) {
         stage.innerHTML = s.html;
         design = Object.assign({}, s.design);
-        applyDesign(); refreshSlides(); setEditable(editing); go(i, 'restore');
+        applyDesign(); refreshSlides(); setEditable(editing); go(s.cur != null ? s.cur : i, 'restore');
         dirty = true; autosave(); updateHistoryUI();
     }
     function undo() { commit(); if (hpos > 0) { hpos--; restore(hist[hpos]); } }
@@ -387,7 +469,10 @@ body.editing .deck-chrome { right: 330px; }
     stage.addEventListener('focusout', function (e) { if (e.target.closest && e.target.closest('.ed')) commit(); });
 
     // a pending text or slider edit is its own step: commit it before the next change starts
-    function flushPending() { if (typingTimer || scaleTimer) { clearTimeout(scaleTimer); scaleTimer = null; commit(); } }
+    function flushPending() {
+        if (notesTimer) writeNotes();
+        if (typingTimer || scaleTimer) { clearTimeout(scaleTimer); scaleTimer = null; commit(); }
+    }
     function setDesign(key, val) { flushPending(); design[key] = val; applyDesign(); commit(); }
     document.getElementById('deckFDisplay').onchange = function (e) { setDesign('fDisplay', e.target.value); };
     document.getElementById('deckFBody').onchange = function (e) { setDesign('fBody', e.target.value); };
@@ -402,6 +487,59 @@ body.editing .deck-chrome { right: 330px; }
     [].forEach.call(document.querySelectorAll('#deckSwatches button'), function (b) {
         b.onclick = function () { setDesign('accent', b.dataset.c); };
     });
+
+    /* slide structure: each action is one undo step */
+    var notesBox = document.getElementById('deckNotes'), layoutSel = document.getElementById('deckLayout');
+    var layoutTpl = document.getElementById('deckLayouts');
+    [].forEach.call(layoutTpl ? layoutTpl.content.querySelectorAll('.slide[data-layout]') : [], function (s) {
+        var o = document.createElement('option'); o.value = s.dataset.layout; o.textContent = s.dataset.name || s.dataset.layout;
+        layoutSel.appendChild(o);
+    });
+    function structural(fn) {
+        flushPending();
+        fn();
+        refreshSlides(); setEditable(editing); go(i, 'restore'); commit();
+    }
+    function insertAfterCurrent(node) {
+        node.classList.remove('active', 'visible');
+        slides[i].parentNode.insertBefore(node, slides[i].nextSibling); i++;
+    }
+    document.getElementById('deckSlideUp').onclick = function () {
+        if (i > 0) structural(function () { slides[i].parentNode.insertBefore(slides[i], slides[i - 1]); i--; });
+    };
+    document.getElementById('deckSlideDown').onclick = function () {
+        if (i < slides.length - 1) structural(function () { slides[i].parentNode.insertBefore(slides[i + 1], slides[i]); i++; });
+    };
+    document.getElementById('deckSlideDup').onclick = function () {
+        structural(function () { insertAfterCurrent(slides[i].cloneNode(true)); });
+    };
+    document.getElementById('deckSlideDel').onclick = function () {
+        if (slides.length > 1) structural(function () { slides[i].remove(); i = Math.min(i, slides.length - 2); });
+    };
+    document.getElementById('deckSlideHide').onclick = function () {
+        structural(function () { slides[i].classList.toggle('deck-hidden'); });
+    };
+    document.getElementById('deckSlideDark').onclick = function () {
+        structural(function () { slides[i].classList.toggle('dark'); });
+    };
+    document.getElementById('deckSlideAdd').onclick = function () {
+        var src = layoutTpl && layoutTpl.content.querySelector('.slide[data-layout="' + layoutSel.value + '"]');
+        if (src) structural(function () { insertAfterCurrent(src.cloneNode(true)); });
+    };
+
+    // speaker notes: the textarea edits the current slide's <aside class="notes">
+    var notesSlide = null;
+    function writeNotes() {
+        clearTimeout(notesTimer); notesTimer = null;
+        var s = notesSlide || slides[i]; if (!s) return;
+        var n = s.querySelector('aside.notes'), val = notesBox.value;
+        if (!n) { if (!val) return; n = document.createElement('aside'); n.className = 'notes'; s.appendChild(n); }
+        if (n.textContent.trim() !== val) n.textContent = val;
+        commit();
+    }
+    notesBox.addEventListener('focus', function () { notesSlide = slides[i]; });
+    notesBox.addEventListener('input', function () { clearTimeout(notesTimer); notesTimer = setTimeout(writeNotes, 600); });
+    notesBox.addEventListener('blur', function () { writeNotes(); notesSlide = null; });
 
     eb.onclick = function () {
         editing = !editing;
@@ -462,8 +600,8 @@ body.editing .deck-chrome { right: 330px; }
         if (!(e.metaKey || e.ctrlKey)) return;
         var k = e.key.toLowerCase();
         if (k === 's') { e.preventDefault(); saveFile(); return; }
-        var inText = document.activeElement && document.activeElement.isContentEditable;
-        if (inText) return;                         // inside text, the browser's own undo applies
+        var ae = document.activeElement;
+        if (ae && (ae.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) return;   // the field's own undo applies
         if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
         else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo(); }
     });
@@ -514,7 +652,7 @@ body.editing .deck-chrome { right: 330px; }
         win.document.getElementById('preset') && (win.document.getElementById('preset').onclick = function () { t0 = Date.now(); });
     }
 
-    go(0);
+    go(0); if (!shown(0)) step(1);
 })();
 </script>
 </body>

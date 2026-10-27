@@ -57,19 +57,19 @@ await page.evaluate(()=>document.fonts && document.fonts.ready);
 // Hide the deck's own controls (edit button, panel, dot nav, keyboard hint) so they stay out of the PDF.
 await page.addStyleTag({ content: '.deck-chrome,.deck-editbtn,.deck-panel,.deck-tip{display:none!important}' });
 await page.waitForTimeout(1200);
-const n = await page.evaluate(()=>document.querySelectorAll('.slide').length);
+const n = await page.evaluate(()=>document.querySelectorAll('.slide:not(.deck-hidden)').length);
 if (!n) { console.error('No .slide elements found.'); await browser.close(); server.close(); process.exit(1); }
 
 const shots = [];
 for (let i=0;i<n;i++){
   await page.evaluate((idx)=>{
-    const s = document.querySelectorAll('.slide');
+    const s = document.querySelectorAll('.slide:not(.deck-hidden)');
     s.forEach((el,j)=>{ const on=j===idx;
       el.classList.toggle('active',on); el.classList.toggle('visible',on);
       el.style.visibility = on?'visible':'hidden'; el.style.opacity = on?'1':'0';
     });
-    document.querySelectorAll('.slide')[idx].querySelectorAll('.reveal').forEach(e=>{e.style.opacity='1';e.style.transform='none';});
-    document.querySelectorAll('.slide')[idx].querySelectorAll('[data-draw]').forEach(e=>{e.style.strokeDashoffset='0';});
+    document.querySelectorAll('.slide:not(.deck-hidden)')[idx].querySelectorAll('.reveal').forEach(e=>{e.style.opacity='1';e.style.transform='none';});
+    document.querySelectorAll('.slide:not(.deck-hidden)')[idx].querySelectorAll('[data-draw]').forEach(e=>{e.style.strokeDashoffset='0';});
   }, i);
   await page.waitForTimeout(450);
   const b = await page.screenshot({ type:'png' });

@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node editor.spec.mjs"
+    "test": "node editor.spec.mjs && node editor-m2.spec.mjs"
   },
   "devDependencies": {
     "playwright": "^1.64.1"
