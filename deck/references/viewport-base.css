@@ -1,0 +1,136 @@
+/* ===========================================================================
+   DECK — FIXED 16:9 STAGE  ·  MANDATORY BASE STYLES
+   Include this ENTIRE block in every deck's <style>.
+   Slides are authored at 1920×1080 and the whole stage is scaled to fit.
+   Do NOT reflow slide content per device — letterbox/pillarbox instead.
+   =========================================================================== */
+
+/* 1. Lock the browser window */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #0b0b0c);
+}
+
+/* 2. Full-window viewport that centers the stage */
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #0b0b0c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 3. The fixed 1920×1080 design canvas.
+      JS sets transform: scale(...) on resize. transform-origin must be center
+      so the flex-centering above keeps it middle-of-screen. */
+.deck-stage {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    transform-origin: center center;
+    background: var(--slide-bg, #ffffff);
+}
+
+/* 4. Slides stack inside the stage. Switch visibility with .active / .visible —
+      NEVER display:none for switching (later layout classes like
+      .slide-content{display:flex} would override it and show every slide). */
+.slide {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #ffffff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+
+/* 5. Keep media inside authored bounds */
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+
+/* 6. Deck chrome (dot-nav etc.) lives outside the slide design system */
+.deck-chrome {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+/* 7. Entrance reveals — trigger via .visible on the active slide.
+      Stagger children with --d (set inline: style="--d:2") or nth-child below. */
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity .6s cubic-bezier(.16,1,.3,1),
+                transform .6s cubic-bezier(.16,1,.3,1);
+    transition-delay: calc(var(--d, 0) * .09s);
+}
+.slide.visible .reveal { opacity: 1; transform: none; }
+.slide.visible .reveal:nth-child(1) { transition-delay: .06s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: .15s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: .24s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: .33s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: .42s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: .51s; }
+
+/* 8. Self-drawing icon strokes (see references/icons.md) re-arm on slide-enter */
+.slide [data-draw] { stroke-dasharray: var(--len, 1); stroke-dashoffset: var(--len, 1); }
+.slide.visible [data-draw] {
+    animation: deck-draw .75s cubic-bezier(.16,1,.3,1) forwards;
+    animation-delay: calc(.2s + var(--d, 0) * .09s);
+}
+@keyframes deck-draw { to { stroke-dashoffset: 0; } }
+
+/* 9. Print — one fixed-size slide per page (Save as PDF gives a clean deck).
+      The deck's @page rule (set in scaffold) sizes pages to 1920×1080. */
+@media print {
+    html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+    .deck-viewport { position: static; overflow: visible; background: #fff; display: block; }
+    .deck-stage { transform: none !important; width: 1920px; height: auto; background: none; }
+    .slide {
+        position: relative;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 1920px; height: 1080px;
+        break-after: page;
+        page-break-after: always;
+    }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+    .slide .reveal { opacity: 1 !important; transform: none !important; }
+    .slide [data-draw] { stroke-dashoffset: 0 !important; }
+    .deck-chrome, .deck-editbtn, .deck-panel, .deck-tip { display: none !important; }
+}
+
+/* 10. Reduced motion — honor the user's setting */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .12s !important;
+    }
+    .slide [data-draw] { stroke-dashoffset: 0 !important; }
+}
+
+/* 11. Single-slide preview mode (presenter thumbnails): body.deck-preview shows
+       only the .slide.preview-on, no chrome. Driven by ?preview=N in scaffold JS. */
+body.deck-preview .deck-chrome,
+body.deck-preview .deck-editbtn,
+body.deck-preview .deck-panel,
+body.deck-preview .deck-tip { display: none !important; }
+body.deck-preview .slide { transition: none; }

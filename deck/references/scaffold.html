@@ -1,0 +1,367 @@
+<!doctype html>
+<!-- ===========================================================================
+     DECK SCAFFOLD  ·  single-file, zero-dependency HTML presentation
+     Fill in: fonts, :root tokens, slides. Keep the engine (CSS base + JS) intact.
+
+     What's built in:
+       · Fixed 1920×1080 stage, scaled to fit (letterbox) — viewport-base.css
+       · Keyboard nav (← → Space PgUp/Dn Home End), dot-nav, click-advance
+       · Edit mode + design panel: swap display/body font, accent, text scale;
+         click any .ed text to edit; autosaves to localStorage; JSON export
+       · Presenter mode (press S): popup with current + next slide, speaker
+         notes, and a timer; stays in sync via BroadcastChannel
+       · ?preview=N single-slide mode (used by presenter thumbnails)
+       · Print = one 1920×1080 page per slide  →  Save as PDF
+     Replace SAVE_KEY with a deck-specific string.  Speaker notes go in
+     <aside class="notes"> inside each slide (hidden on screen, shown in presenter).
+     =========================================================================== -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Deck</title>
+
+<!-- FONTS — pick distinctive faces (never Inter/Roboto/Arial/system as display).
+     Example pairing; the skill replaces this per chosen direction. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+
+<style>
+/* ===========================================================================
+   THEME TOKENS — change these to change the whole deck.
+   Authored at 1920×1080 stage size (px), not vw/clamp.
+   =========================================================================== */
+:root {
+    /* surfaces */
+    --stage-bg:   #14110d;   /* letterbox area behind the stage */
+    --slide-bg:   #f4efe7;   /* default light content slide */
+    --slide-dark: #14110d;   /* cover + chapter dividers */
+    /* ink */
+    --ink:        #14110d;
+    --ink-2:      #45403a;
+    --mute:       #8a837a;
+    --line:       #e4ddd0;
+    /* brand accent (client or house brand) */
+    --accent:     #c0560f;
+    --accent-soft:rgba(192,86,15,.10);
+    --on-dark:    #f4efe7;
+    /* type */
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body:    'Work Sans', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', monospace;
+    --scale: 1;              /* design-panel text-size multiplier */
+}
+
+* { box-sizing: border-box; }
+
+/* type primitives — all sized at 1920×1080 scale */
+.slide { font-family: var(--font-body); color: var(--ink); }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.02; letter-spacing: -.02em; }
+.display  { font-weight: 900; font-size: calc(150px * var(--scale)); letter-spacing: -.035em; }
+.h2       { font-weight: 700; font-size: calc(76px  * var(--scale)); letter-spacing: -.025em; }
+p         { margin: 0; font-size: calc(30px * var(--scale)); line-height: 1.5; color: var(--ink-2); }
+/* functional caption ONLY (e.g. a chart axis unit) — sentence case, sparing.
+   NEVER a decorative label / eyebrow / tag / chip. House rule: no all-caps tracked add-on labels. */
+.mono     { font-family: var(--font-mono); font-size: calc(18px * var(--scale)); letter-spacing: .02em; color: var(--mute); }
+/* emphasis = font-switch, not bold: <em> goes display-italic in the accent */
+em { font-family: var(--font-display); font-style: italic; font-weight: 600; color: var(--accent); }
+
+/* slide padding + the dark/light rhythm */
+.slide { padding: 110px 130px; display: flex; flex-direction: column; }
+.slide.dark  { background: var(--slide-dark); color: var(--on-dark); }
+.slide.dark h1, .slide.dark h2, .slide.dark h3 { color: var(--on-dark); }
+.slide.dark p { color: rgba(244,239,231,.72); }
+.slide.center { justify-content: center; }
+/* HEADER-TOP RULE: the headline sits at the top; wrap everything below it in .slide-body
+   so the content is vertically centered in the remaining space (even on sparse slides). */
+.slide-body { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+/* top-to-bottom navigation: slides rise on enter (screen only, so PDF/print isn't offset) */
+@media screen {
+  .slide { transition: opacity .45s ease, transform .6s cubic-bezier(.16,1,.3,1); transform: translateY(30px); }
+  .slide.active, .slide.visible { transform: translateY(0); }
+}
+
+/* bullets — never plain •; em-dash marker in mono accent */
+.list { display: flex; flex-direction: column; gap: 26px; margin-top: 48px; }
+.li { display: grid; grid-template-columns: 1.4em 1fr; align-items: baseline; }
+.li::before { content: "—"; font-family: var(--font-mono); color: var(--accent); }
+.li .t { font-family: var(--font-display); font-weight: 600; font-size: calc(34px * var(--scale)); color: inherit; }
+
+/* edit-mode affordance */
+.ed { border-radius: 5px; outline: none; transition: box-shadow .15s, background .15s; }
+body.editing .ed { box-shadow: 0 0 0 1.5px var(--accent-soft); background: var(--accent-soft); cursor: text; }
+body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
+
+/* === PASTE references/viewport-base.css HERE (the full file) ===
+   It provides .deck-viewport, .deck-stage, .slide visibility, .reveal,
+   [data-draw], print, reduced-motion, and preview mode. Kept separate here
+   so this scaffold stays readable; the generated deck inlines it. */
+
+/* --- deck chrome: dot-nav (position only, no numbers) --- */
+/* vertical nav: dots are a column on the right (top-to-bottom sequence) */
+.deck-chrome { display: flex; flex-direction: column; gap: 11px; align-items: center;
+    left: auto; right: 30px; bottom: auto; top: 50%; transform: translateY(-50%); }
+.deck-chrome .dot { width: 9px; height: 9px; border-radius: 50%; border: none; padding: 0;
+    background: rgba(138,131,122,.45); cursor: pointer; transition: all .2s; }
+.deck-chrome .dot.on { background: var(--accent); width: 9px; height: 30px; border-radius: 5px; }
+
+/* --- edit button + design panel --- */
+.deck-editbtn { position: fixed; top: 20px; right: 20px; z-index: 40; font-family: var(--font-mono);
+    font-size: 13px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; height: 40px; padding: 0 16px;
+    border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink-2);
+    box-shadow: 0 8px 24px -12px rgba(0,0,0,.3); }
+.deck-editbtn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.deck-panel { position: fixed; top: 0; right: 0; height: 100%; width: 300px; background: #fffdfa;
+    border-left: 1px solid var(--line); transform: translateX(102%); transition: transform .35s cubic-bezier(.2,.7,.2,1);
+    z-index: 39; padding: 74px 22px 22px; overflow-y: auto; box-shadow: -30px 0 70px -42px rgba(0,0,0,.3); }
+.deck-panel.open { transform: none; }
+.deck-panel h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--mute); margin: 22px 0 12px; } .deck-panel h4:first-child { margin-top: 0; }
+.deck-panel .field { margin-bottom: 14px; }
+.deck-panel label { display: block; font-size: 12.5px; color: var(--ink-2); margin-bottom: 6px; }
+.deck-panel select, .deck-panel input[type=range] { width: 100%; }
+.deck-panel select { font-size: 13px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.deck-swatches { display: flex; gap: 9px; }
+.deck-swatches button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff;
+    box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.deck-swatches button.on { box-shadow: 0 0 0 2px var(--accent); }
+.deck-pbtns { display: flex; gap: 8px; margin-top: 20px; }
+.deck-pbtns button { flex: 1; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    padding: 10px; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink-2); }
+.deck-tip { position: fixed; left: 20px; bottom: 18px; z-index: 30; font-family: var(--font-mono);
+    font-size: 11px; letter-spacing: .06em; color: var(--mute); }
+
+/* speaker notes live in the slide but never show on screen (presenter reads them) */
+.notes { display: none; }
+</style>
+</head>
+<body>
+
+<button class="deck-editbtn" id="deckEdit">Edit</button>
+
+<aside class="deck-panel" id="deckPanel">
+    <h4>Typography</h4>
+    <div class="field"><label>Display font</label>
+        <select id="deckFDisplay">
+            <option value="'Fraunces', Georgia, serif">Fraunces</option>
+            <option value="'Work Sans', sans-serif">Work Sans</option>
+            <option value="Georgia, serif">Georgia</option>
+        </select></div>
+    <div class="field"><label>Body font</label>
+        <select id="deckFBody">
+            <option value="'Work Sans', sans-serif">Work Sans</option>
+            <option value="'Fraunces', serif">Fraunces</option>
+        </select></div>
+    <div class="field"><label>Text size <span id="deckScaleVal">100%</span></label>
+        <input type="range" id="deckScale" min="80" max="125" value="100"></div>
+    <h4>Accent</h4>
+    <div class="field"><div class="deck-swatches" id="deckSwatches">
+        <button data-c="#c0560f" title="Orange" style="background:#c0560f"></button>
+        <button data-c="#2e47ff" title="Blue"   style="background:#2e47ff"></button>
+        <button data-c="#1f7a3f" title="Green"  style="background:#1f7a3f"></button>
+        <button data-c="#5b3fd1" title="Purple" style="background:#5b3fd1"></button>
+    </div></div>
+    <div class="deck-pbtns"><button id="deckReset">Reset</button><button id="deckExport">Export</button></div>
+</aside>
+
+<div class="deck-viewport">
+    <main class="deck-stage" id="deckStage">
+
+        <!-- COVER (dark) -->
+        <section class="slide dark center active">
+            <h1 class="display reveal ed" data-k="coverTitle" contenteditable="false">Deck title<br>goes here</h1>
+            <aside class="notes">Opening line for the presenter. Set the room, name the one thing this deck argues.</aside>
+        </section>
+
+        <!-- CONTENT (light) — header at top, content centered in .slide-body -->
+        <section class="slide">
+            <h2 class="h2 reveal ed" data-k="s2h" contenteditable="false">A headline that carries the slide</h2>
+            <div class="slide-body">
+                <div class="list">
+                    <div class="li reveal"><span class="t ed" data-k="s2a" contenteditable="false">First point, stated plainly</span></div>
+                    <div class="li reveal"><span class="t ed" data-k="s2b" contenteditable="false">Second point with an <em>emphasis</em></span></div>
+                    <div class="li reveal"><span class="t ed" data-k="s2c" contenteditable="false">Third point</span></div>
+                </div>
+            </div>
+            <aside class="notes">What to say over this slide.</aside>
+        </section>
+
+        <!-- CHAPTER DIVIDER (dark) -->
+        <section class="slide dark center">
+            <h2 class="display reveal ed" data-k="ch1" contenteditable="false">Next chapter</h2>
+        </section>
+
+        <!-- add slides here -->
+
+    </main>
+</div>
+
+<div class="deck-chrome" id="deckDots"></div>
+<div class="deck-tip">scroll or ↓ ↑ to move · <b>S</b> presenter · <b>Edit</b> to restyle</div>
+
+<script>
+(function () {
+    'use strict';
+    var SAVE_KEY = 'deck-REPLACE-ME-v1';            // make this deck-specific
+    var DESIGN_W = 1920, DESIGN_H = 1080;
+    var stage = document.getElementById('deckStage');
+    var slides = [].slice.call(document.querySelectorAll('.slide'));
+    var i = 0;
+
+    /* ---- preview mode (?preview=N): show one slide, no chrome, for presenter thumbs ---- */
+    var previewIdx = (function () {
+        var m = (location.search || '').match(/[?&]preview=(\d+)/);
+        return m ? parseInt(m[1], 10) : null;
+    })();
+
+    /* ---- fixed-stage scaling ---- */
+    function fit() {
+        var s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+        stage.style.transform = 'scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit); fit();
+
+    /* ---- dot nav ---- */
+    var dotsWrap = document.getElementById('deckDots'), dots = [];
+    slides.forEach(function (s, idx) {
+        var b = document.createElement('button'); b.className = 'dot';
+        b.addEventListener('click', function () { go(idx, 'click'); });
+        dotsWrap.appendChild(b); dots.push(b);
+    });
+
+    var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('deck-' + location.pathname) : null;
+    function go(n, reason) {
+        i = Math.max(0, Math.min(slides.length - 1, n));
+        slides.forEach(function (s, idx) {
+            s.classList.toggle('active', idx === i);
+            s.classList.toggle('visible', idx === i);
+        });
+        dots.forEach(function (d, idx) { d.classList.toggle('on', idx === i); });
+        if (bc && reason !== 'remote') bc.postMessage({ type: 'go', idx: i });
+    }
+    if (bc) bc.onmessage = function (e) { if (e.data && e.data.type === 'go') go(e.data.idx, 'remote'); };
+
+    if (previewIdx !== null) {
+        document.body.classList.add('deck-preview');
+        slides.forEach(function (s, idx) {
+            var on = idx === previewIdx;
+            s.classList.toggle('active', on); s.classList.toggle('visible', on);
+        });
+        return;                                     // preview = static single slide, no nav/edit
+    }
+
+    /* ---- keyboard + click nav ---- */
+    document.addEventListener('keydown', function (e) {
+        if (document.activeElement && document.activeElement.isContentEditable) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        var k = e.key;
+        if (k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(i + 1); }
+        else if (k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(i - 1); }
+        else if (k === 'Home') go(0);
+        else if (k === 'End') go(slides.length - 1);
+        else if (k === 's' || k === 'S') openPresenter();
+    });
+    document.addEventListener('click', function (e) {
+        if (document.body.classList.contains('editing')) return;
+        if (e.target.closest('.deck-chrome,.deck-editbtn,.deck-panel,.deck-tip')) return;
+        go(i + 1);
+    });
+    // top-to-bottom scroll navigation
+    var wheelLock = false;
+    document.addEventListener('wheel', function (e) {
+        if (document.body.classList.contains('editing')) return;
+        if (Math.abs(e.deltaY) < 14 || wheelLock) return;
+        wheelLock = true; go(i + (e.deltaY > 0 ? 1 : -1));
+        setTimeout(function () { wheelLock = false; }, 650);
+    }, { passive: true });
+
+    /* ---- design panel + edit mode + autosave ---- */
+    var defaults = { fDisplay: getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim(),
+        fBody: getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim(),
+        scale: 100, accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), content: {} };
+    var st = Object.assign({}, defaults);
+    try { var saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved) st = Object.assign({}, defaults, saved); } catch (e) {}
+    st.content = st.content || {};
+    var root = document.documentElement;
+    function apply() {
+        root.style.setProperty('--font-display', st.fDisplay);
+        root.style.setProperty('--font-body', st.fBody);
+        root.style.setProperty('--scale', st.scale / 100);
+        root.style.setProperty('--accent', st.accent);
+        var fd = document.getElementById('deckFDisplay'), fb = document.getElementById('deckFBody');
+        if (fd) fd.value = st.fDisplay; if (fb) fb.value = st.fBody;
+        document.getElementById('deckScale').value = st.scale;
+        document.getElementById('deckScaleVal').textContent = st.scale + '%';
+        [].forEach.call(document.querySelectorAll('#deckSwatches button'), function (b) { b.classList.toggle('on', b.dataset.c === st.accent); });
+    }
+    function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(st)); } catch (e) {} }
+    document.querySelectorAll('.ed').forEach(function (el) {
+        var k = el.dataset.k; if (st.content[k] != null) el.innerHTML = st.content[k];
+        el.addEventListener('input', function () { st.content[k] = el.innerHTML; save(); });
+    });
+    apply();
+    document.getElementById('deckFDisplay').onchange = function (e) { st.fDisplay = e.target.value; apply(); save(); };
+    document.getElementById('deckFBody').onchange = function (e) { st.fBody = e.target.value; apply(); save(); };
+    document.getElementById('deckScale').oninput = function (e) { st.scale = +e.target.value; apply(); save(); };
+    document.querySelectorAll('#deckSwatches button').forEach(function (b) { b.onclick = function () { st.accent = b.dataset.c; apply(); save(); }; });
+    var editing = false, eb = document.getElementById('deckEdit'), panel = document.getElementById('deckPanel');
+    eb.onclick = function () {
+        editing = !editing;
+        document.body.classList.toggle('editing', editing); panel.classList.toggle('open', editing);
+        eb.classList.toggle('active', editing); eb.textContent = editing ? 'Done' : 'Edit';
+        document.querySelectorAll('.ed').forEach(function (el) { el.setAttribute('contenteditable', editing ? 'true' : 'false'); });
+    };
+    document.getElementById('deckReset').onclick = function () { if (confirm('Reset design + text edits?')) { localStorage.removeItem(SAVE_KEY); location.reload(); } };
+    document.getElementById('deckExport').onclick = function () {
+        var blob = new Blob([JSON.stringify(st, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'deck-design.json'; a.click();
+    };
+
+    /* ---- presenter mode (S): popup with current + next slide, notes, timer ---- */
+    function openPresenter() {
+        var notes = slides.map(function (s) { var n = s.querySelector('.notes'); return n ? n.innerHTML : ''; });
+        var win = window.open('', 'deck-presenter', 'width=1280,height=820');
+        if (!win) return;
+        var file = location.pathname.split('/').pop();
+        win.document.write(
+            '<!doctype html><meta charset="utf-8"><title>Presenter</title>' +
+            '<style>body{margin:0;font-family:-apple-system,system-ui,sans-serif;background:#0b0b0c;color:#eee;' +
+            'display:grid;grid-template-columns:1.4fr 1fr;grid-template-rows:1fr auto;gap:14px;padding:14px;height:100vh;box-sizing:border-box}' +
+            'iframe{width:100%;height:100%;border:0;border-radius:10px;background:#000}' +
+            '.cur{grid-row:1/3}.next{height:60%}.lbl{font:600 12px/1 monospace;letter-spacing:.02em;color:#888;margin:0 0 6px}' +
+            '.notes{font-size:18px;line-height:1.5;overflow:auto;max-height:26vh}.bar{display:flex;justify-content:space-between;align-items:center}' +
+            '.timer{font:600 22px monospace}button{font:inherit;background:#222;color:#eee;border:0;border-radius:6px;padding:6px 12px;cursor:pointer}</style>' +
+            '<div class="cur"><p class="lbl">Now</p><iframe id="pcur" src="' + file + '?preview=' + i + '"></iframe></div>' +
+            '<div><div class="next"><p class="lbl">Next</p><iframe id="pnext" src="' + file + '?preview=' + Math.min(i + 1, slides.length - 1) + '"></iframe></div>' +
+            '<div class="bar"><p class="lbl">Notes</p><div class="bar" style="gap:8px"><span class="timer" id="ptimer">00:00</span><button id="preset">Reset</button></div></div>' +
+            '<div class="notes" id="pnotes"></div></div>'
+        );
+        win.document.close();
+        var t0 = Date.now(), tEl;
+        var sync = function () {
+            win.document.getElementById('pcur').src = file + '?preview=' + i;
+            win.document.getElementById('pnext').src = file + '?preview=' + Math.min(i + 1, slides.length - 1);
+            win.document.getElementById('pnotes').innerHTML = notes[i] || '<em style="color:#666">No notes</em>';
+        };
+        var pbc = ('BroadcastChannel' in window) ? new BroadcastChannel('deck-' + location.pathname) : null;
+        if (pbc) pbc.onmessage = function (e) { if (e.data && e.data.type === 'go') { go(e.data.idx, 'remote'); sync(); } };
+        win.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') { go(i + 1); if (pbc) pbc.postMessage({ type: 'go', idx: i }); sync(); }
+            if (e.key === 'ArrowLeft') { go(i - 1); if (pbc) pbc.postMessage({ type: 'go', idx: i }); sync(); }
+            if (e.key === 'r' || e.key === 'R') t0 = Date.now();
+        });
+        setTimeout(sync, 200);
+        win.setInterval(function () {
+            tEl = win.document.getElementById('ptimer'); if (!tEl) return;
+            var s = Math.floor((Date.now() - t0) / 1000);
+            tEl.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+        }, 1000);
+        win.document.getElementById('preset') && (win.document.getElementById('preset').onclick = function () { t0 = Date.now(); });
+    }
+
+    go(0);
+})();
+</script>
+</body>
+</html>
