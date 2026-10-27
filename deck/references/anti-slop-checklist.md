@@ -1,6 +1,6 @@
 # Anti-slop checklist — the pre-delivery gate
 
-Run this before showing the user any deck. Treat it as a **bug hunt**: assume there are problems; if you found none, you didn't look hard enough. It has two parts — the hard rules (house identity) and the general anti-slop gate (field-wide).
+Run this before showing the user any deck. Treat it as a **bug hunt**: assume there are problems; if you found none, you didn't look hard enough. It has four parts: the hard rules (house identity), the general anti-slop gate (field-wide), prose, and extra checks for explainer decks.
 
 ## Part 1 — Hard rules (NON-NEGOTIABLE)
 
@@ -30,13 +30,6 @@ Run this before showing the user any deck. Treat it as a **bug hunt**: assume th
 - [ ] **Logo motif present** (client-branded) — a shape lifted from the logo, enlarged + animated behind slides; cover has an animated logo reveal.
 - [ ] **Icons echo the brand** — stroke/corners/geometry match the logo, not a stock line-icon pack.
 - [ ] **Cards used sparingly** — and if used, ONE dedicated non-square card shape (subtle corner/notch/asymmetric-radius, not circular), no coloured edge, **no numbering**.
-
-## Part 4 — Explainer decks (if applicable)
-- [ ] **Storyboard was approved before building** — the `<deck>-storyboard.md` was written and okayed; the build follows it, not an emergent outline.
-- [ ] **Exactly one point per slide** — no slide carries two ideas.
-- [ ] **No forward references** — each slide rests only on ideas already shown; the thesis lands by the end.
-- [ ] **Every concept has a distinct fresh visual** — no two concept slides share a `diagrams.md` family; no default flowchart.
-- [ ] **5-second test** — a smart newcomer grasps each slide fast; it's interesting (curiosity gap / analogy / "so what" beats), not a flat fact list.
 - [ ] **Imagery where the topic benefits** (travel/place/people/product) — cohesively treated to the palette, never raw clashing stock; not just the cover.
 - [ ] **Cards are not all the same box** — card form/radius varies and fits the brand/topic; fact rows often better as hairline bands than identical tinted boxes.
 - [ ] **Background has depth** — gradient mesh, grain, graph-paper tone, or atmospheric glow where the direction calls for it; not a flat solid unless the direction is deliberately flat (Swiss/editorial).
@@ -54,6 +47,14 @@ Read **every word** of slide copy *and speaker notes*. The em dash is the most c
 - [ ] **Headlines are assertions**, not noun-phrase labels ("Our approach" → a claim).
 - [ ] **Sourced** — every number/claim is grounded, or marked "estimate".
 - [ ] **Run the `stop-slop` skill** on the deck's text if available, for the full rubric; otherwise apply its rules by hand.
+
+## Part 4 — Explainer decks (if applicable)
+
+- [ ] **Storyboard was approved before building** — the `<deck>-storyboard.md` was written and okayed; the build follows it, not an emergent outline.
+- [ ] **Exactly one point per slide** — no slide carries two ideas.
+- [ ] **No forward references** — each slide rests only on ideas already shown; the thesis lands by the end.
+- [ ] **Every concept has a distinct fresh visual** — no two concept slides share a `diagrams.md` family; no default flowchart.
+- [ ] **5-second test** — a smart newcomer grasps each slide fast; it's interesting (curiosity gap / analogy / "so what" beats), not a flat fact list.
 
 ## Slop fingerprints to catch
 

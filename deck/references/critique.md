@@ -1,6 +1,6 @@
 # Critique loop — score, then fix
 
-After building (Phase 6), critique the deck like a senior designer would, then act on it. This catches "technically fine but not good" before the user sees it. Pair it with `anti-slop-checklist.md` (mechanical) — this file is judgment.
+After building (step 4, quality), critique the deck like a senior designer would, then act on it. This catches "technically fine but not good" before the user sees it. Pair it with `anti-slop-checklist.md` (mechanical) — this file is judgment.
 
 Run it across the deck (sample the cover, 2–3 content slides, a chapter divider, the close). Score each dimension **0–10**, then produce the action list.
 
@@ -36,7 +36,7 @@ FIX — sorted by severity:
 QUICK WINS — if there were only 5 minutes, do these 3.
 ```
 
-Then apply the fatal + important fixes, re-render, and re-verify (Phase 7). One fix often creates another — recheck the slides you touched. Don't declare done until a full pass surfaces nothing new.
+Then apply the fatal + important fixes, re-render, and re-verify (step 4, quality). One fix often creates another — recheck the slides you touched. Don't declare done until a full pass surfaces nothing new.
 
 ## Common deck problems (pre-flight self-check)
 

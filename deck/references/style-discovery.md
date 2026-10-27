@@ -22,8 +22,8 @@ For conservative/high-stakes decks, keep all three readable and authoritative (t
 
 ## After the pick
 - Treat the chosen preview's CSS as the design recipe; expand the *same* system across every slide layout (don't switch directions mid-deck).
-- Carry its palette, type, signature device, card style, and atmosphere into the full build (Phase 5).
-- Delete `.deck/previews/` at delivery (Phase 8).
+- Carry its palette, type, signature device, card style, and atmosphere into the full build (steps 2 and 3, build).
+- Delete `.deck/previews/` at delivery (step 5, deliver).
 
 ## Preview authenticity (don't ship process labels)
 Before opening, scan each preview's visible text — remove anything that says `preview`, `option`, `template`, `wildcard`, `style`, a file path, or a requirements note. The only chrome allowed is real deck chrome: the deck title, client name, date. And still no eyebrow/lede/number on the slide.

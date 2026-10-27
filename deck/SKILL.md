@@ -40,7 +40,7 @@ These are non-negotiable. Every other deck skill in the field violates at least 
 - **No colored line/bar on card borders.** Never a colored top-stripe or left-rule as a card's edge. Color lives in the *fill*, not the border. Use the card recipes in `references/cards.md`.
 - **Dark/light rhythm.** Cover + chapter dividers are DARK; content slides are LIGHT. A dark slide announces a new part; light slides are the content. (A chosen all-dark or all-light direction may override this — confirm with the user.)
 - **No em dashes in slide prose.** The em-dash (`—`) is reserved for the bullet marker *only*. Inside any sentence — headline, body, caption, speaker note — use a comma, colon, or period instead. (En-dashes in number ranges like `R$10–15` or `Dec–Feb` are fine.)
-- **Sourced + stop-slop prose.** Only claims you can ground. Assertive, concrete, plain. Banned: corporate filler, hedging, and AI tells — `it's not just X, it's Y`; `in today's fast-paced world`; `whether you're A or B`; `unlock / elevate / seamless / robust / leverage`; rule-of-three padding; needless adverbs. Write copy first-time-clean, then run the stop-slop pass in Phase 6.
+- **Sourced + stop-slop prose.** Only claims you can ground. Assertive, concrete, plain. Banned: corporate filler, hedging, and AI tells — `it's not just X, it's Y`; `in today's fast-paced world`; `whether you're A or B`; `unlock / elevate / seamless / robust / leverage`; rule-of-three padding; needless adverbs. Write copy first-time-clean, then run the stop-slop pass in step 4, quality.
 - **Distinctive type.** Never Inter / Roboto / Arial / system fonts as a *display* face. Never converge on Space Grotesk across decks. Pair a characterful display font with a clean body font.
 - **Bullets are never plain `•`.** Use an em-dash, a custom geometric marker, or a mono glyph in the deck's accent.
 
@@ -103,25 +103,25 @@ When you detect a complex topic to *explain*, switch to `references/explainer.md
 
 | File | Read when |
 |------|-----------|
-| `references/viewport-base.css` | Phase 5 — include its full contents in every deck |
-| `references/scaffold.html` | Phase 5 — the single-file shell (stage, nav, design panel, autosave, presenter, print) |
+| `references/viewport-base.css` | Steps 2 and 3, build — include its full contents in every deck |
+| `references/scaffold.html` | Steps 2 and 3, build — the single-file shell (stage, nav, design panel, autosave, presenter, print) |
 | `references/explainer.md` | Explainer mode — decompose a hard topic into a storyline-first, one-point-per-slide storyboard (approval gate before building) |
-| `references/narrative.md` | Phase 1 — deck structures + copy formulas (ledes stripped) |
-| `references/style-discovery.md` | Phase 2 — the 3-direction "show, don't tell" flow |
-| `references/design-directions.md` | Phase 2 — the recipe library (each with a `forbidden` list) |
-| `references/brand-house.md` | Phase 2 — house brand tokens (sets itself up from the user's website on first run) |
-| `references/brand-ingestion.md` | Phase 3 — fetch client logo + palette |
-| `references/cards.md` | Phase 5 — the 6 non-slop card recipes (no colored edge) |
-| `references/charts.md` | Phase 5 — inline-SVG charts & diagrams (data) |
-| `references/diagrams.md` | Phase 5 — strategic schematic diagrams whose intrinsic animation tells the story (journeys, systems, loops) |
-| `references/components.md` | Phase 5 — funnel, persona, timeline, big-number, two-col, mockups |
+| `references/narrative.md` | Step 3, co-build — deck structures + copy formulas (ledes stripped) |
+| `references/style-discovery.md` | Step 2, sample slides — the 3-direction "show, don't tell" flow |
+| `references/design-directions.md` | Step 2, sample slides — the recipe library (each with a `forbidden` list) |
+| `references/brand-house.md` | Step 2, sample slides — house brand tokens (sets itself up from the user's website on first run) |
+| `references/brand-ingestion.md` | Step 2, sample slides — fetch client logo + palette |
+| `references/cards.md` | Steps 2 and 3, build — the 6 non-slop card recipes (no colored edge) |
+| `references/charts.md` | Steps 2 and 3, build — inline-SVG charts & diagrams (data) |
+| `references/diagrams.md` | Steps 2 and 3, build — strategic schematic diagrams whose intrinsic animation tells the story (journeys, systems, loops) |
+| `references/components.md` | Steps 2 and 3, build — funnel, persona, timeline, big-number, two-col, mockups |
 | `references/motion.md` | Sample step — signature visual, ambient animation, imagery (required, rooted in brand/topic) |
 | `references/logo-motif.md` | Sample step — extract a shape from the client's logo as the deck's animated visual signature |
 | `references/icons.md` | Sample step — brand-styled animated icon set |
-| `references/critique.md` | Phase 6 — the 5-dimension critique loop |
-| `references/anti-slop-checklist.md` | Phase 6 — the pre-delivery quality gate |
-| `references/pdf-export.md` | Phase 8 — HTML → PDF |
-| `scripts/export-pdf.sh` | Phase 8 — Playwright PDF export |
+| `references/critique.md` | Step 4, quality — the 5-dimension critique loop |
+| `references/anti-slop-checklist.md` | Step 4, quality — the pre-delivery quality gate |
+| `references/pdf-export.md` | Step 5, deliver — HTML → PDF |
+| `scripts/export-pdf.sh` | Step 5, deliver — Playwright PDF export |
 
 ---
 

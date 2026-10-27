@@ -2,7 +2,7 @@
 
 A deck with generic fade-ups and identical boxes is boring, even when it's clean. **Every deck carries (1) a signature visual motif and (2) at least one ambient animation — both rooted in the brand or the topic.** Not decoration for its own sake; a device that *belongs* to this subject.
 
-This is a required output, checked in Phase 6. Tasteful and CSS-first; always respect `prefers-reduced-motion`.
+This is a required output, checked in step 4, quality. Tasteful and CSS-first; always respect `prefers-reduced-motion`.
 
 ## 1. Find the device (brand or topic)
 Before building, name the one visual idea this deck is about:

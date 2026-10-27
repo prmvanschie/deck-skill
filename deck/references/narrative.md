@@ -1,6 +1,6 @@
 # Narrative — deck structures & copy (ledes stripped)
 
-Pick a structure for the brief (Phase 1), then write **assertion-style headlines** that carry each slide. No eyebrows, no ledes, no slide numbers — the headline does the work.
+Pick a structure for the brief (step 3, co-build), then write **assertion-style headlines** that carry each slide. No eyebrows, no ledes, no slide numbers — the headline does the work.
 
 ## Deck structures
 
@@ -27,7 +27,7 @@ A slide title is a **claim**, not a noun phrase. "Overview" → "The hand-off is
 - **FAB** (capabilities): feature → so you can → which means.
 - **Cost of inaction** (urgency): status quo → what it's costing → it compounds.
 
-## Density (from Phase 0)
+## Density (from step 1, start light)
 - **Speaker-led:** one idea per slide, big type, short phrases, more slides; lean on statement/quote/big-number/chapter beats. Pacing over density.
 - **Reading-first:** more self-contained slides — grids, comparison tables, annotated diagrams, concise captions — but keep a strong hierarchy so it reads designed, not like a doc on a slide. If a dense slide overflows, split it; never shrink type to cram.
 
