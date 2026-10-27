@@ -31,3 +31,35 @@ Edit mode adds class `editing` to `<body>`.
 7. **Reset.** `#deckReset` (with `confirm()` accepted) removes the autosaved edits, and after the reload the deck shows its original text and design.
 8. **Panel labels.** No heading inside `#deckPanel` has a computed `text-transform` of `uppercase`.
 9. **Navigation still works.** Outside edit mode, ArrowDown moves the `active` class from slide 1 to slide 2.
+
+## M2: structure
+
+The "current slide" is the slide with class `active`. Every action below works on the current slide, counts as one committed change for undo/redo, autosaves, and ends up in a saved file.
+
+### Elements
+| Id | What it is |
+|----|------------|
+| `#deckSlidePos` | Text `Slide N of M` for the current slide (1-based, counting every slide, hidden ones included). |
+| `#deckSlideUp`, `#deckSlideDown` | Move the current slide one place earlier or later. It stays the current slide. Disabled at the first or last position. |
+| `#deckSlideDup` | Insert a copy of the current slide right after it. The copy becomes the current slide. |
+| `#deckSlideDel` | Delete the current slide, without a confirm dialog. The slide that takes its place becomes current (the previous one if it was the last). Disabled when only one slide is left. |
+| `#deckSlideHide` | Toggle class `deck-hidden` on the current slide. |
+| `#deckSlideDark` | Toggle class `dark` on the current slide. |
+| `#deckLayout` | `<select>` with one option per slide layout. Its option values are the `data-layout` values of the `<section class="slide" data-layout="…">` elements inside `<template id="deckLayouts">`. |
+| `#deckSlideAdd` | Insert a new slide right after the current one, copied from the layout chosen in `#deckLayout`. The new slide keeps its `data-layout` attribute and becomes current. |
+| `#deckNotes` | `<textarea>` with the speaker notes of the current slide: the text of its `aside.notes`. |
+
+The scaffold's `#deckLayouts` template holds at least these layouts: `title`, `statement`, `bullets`, `two-columns`, `divider`.
+
+### Behaviour
+1. **Position.** `#deckSlidePos` updates after every navigation and structure change.
+2. **Move.** On a deck of at least three slides, moving slide 2 down puts that slide at position 3, keeps it current, and `#deckSlidePos` reads `Slide 3 of M`. Moving it up again restores the original order.
+3. **Duplicate.** The slide count goes up by one, and the new slide's text content equals the original's.
+4. **Delete.** The slide count goes down by one and the deleted slide's text is gone.
+5. **Hide.** A hidden slide stays visible and editable in edit mode. Outside edit mode, ArrowDown on the slide before it skips it and lands on the slide after it. With print media emulated, a hidden slide has computed `display: none`. A saved file keeps the `deck-hidden` class.
+6. **Dark.** The `dark` class toggles on and off.
+7. **Add from layout.** For each layout value, adding it inserts a slide with that `data-layout` right after the current slide. While editing, its `.ed` elements have `contenteditable="true"`.
+8. **Notes.** `#deckNotes` shows the current slide's notes and updates when the current slide changes. Typing in it and then blurring it (or 600 ms without typing) writes the text into the slide's `aside.notes`, creating that element when the slide has none. Notes survive a save to file.
+9. **Undo.** Each move, duplicate, delete, hide, dark toggle, add and notes edit is one undo step. Undo restores the slide count, order and classes from before the action, and the current slide index stays within range.
+10. **Navigation while editing.** With edit mode on and focus on `<body>`, ArrowDown moves to the next slide, hidden slides included.
+11. **M1 still holds.** Every M1 check keeps passing.
