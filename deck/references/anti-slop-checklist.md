@@ -16,7 +16,7 @@ Run this before showing the user any deck. Treat it as a **bug hunt**: assume th
 
 ## Part 2 — General anti-slop gate
 
-- [ ] **Display font is NOT** Inter / Roboto / Arial / system-ui — and not Space Grotesk by default (the converged AI pick). Pick something with character.
+- [ ] **Display font is NOT** Inter / Roboto / Arial / system-ui, and not one of the converged AI picks (Space Grotesk, Bricolage Grotesque, Instrument Serif) unless the brand uses it. Client decks: the display font is the brand's own font or a named substitute for it, recorded in the deck's head comment.
 - [ ] **No purple-gradient-on-white.** Specifically ban `linear-gradient(135deg,#667eea,#764ba2)` on a light bg — the single most overused AI pattern. No generic indigo `#6366f1` as the whole identity.
 - [ ] **Shadows have hierarchy** — a small/medium/large system, not one drop-shadow on everything. Depth is applied with intent (see `cards.md`).
 - [ ] **All colors are CSS variables** — no raw hex scattered in rules; everything reads `var(--…)` so the design panel + theme switch work.

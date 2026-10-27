@@ -27,7 +27,7 @@ Scrape the client's website and **download every usable image**, then use the go
 - These are the client's own assets — fine to use in their deck. Skip anything watermarked or clearly third-party.
 
 ## Type
-- Identify the brand's fonts; if they're available on Google Fonts / Fontshare, use them. If a paid/closed font, pick the closest open substitute and note it.
+- **Fonts come before any font choice of your own.** Read the brand's fonts from the site's CSS (`@font-face`, `font-family`, the `.woff`/`.woff2` file names) or the firecrawl `branding` result. If a font is on Google Fonts / Fontshare, use it. If it's proprietary (a custom brand face), pick the closest open substitute by shape: width (condensed or wide), weight, x-height, geometric or humanist, serif or sans. Never fall back on a personal favourite. Write one line in the deck's head comment: `Brand font: X. Using: Y, because Z.`
 - Keep the house rule: a distinctive display face. If the brand font is generic (Inter/Roboto), use it for body and choose a characterful display companion that fits the brand's feel.
 
 ## Inject as tokens

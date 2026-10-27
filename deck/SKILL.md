@@ -41,7 +41,7 @@ These are non-negotiable. Every other deck skill in the field violates at least 
 - **Dark/light rhythm.** Cover + chapter dividers are DARK; content slides are LIGHT. A dark slide announces a new part; light slides are the content. (A chosen all-dark or all-light direction may override this — confirm with the user.)
 - **No em dashes in slide prose.** The em-dash (`—`) is reserved for the bullet marker *only*. Inside any sentence — headline, body, caption, speaker note — use a comma, colon, or period instead. (En-dashes in number ranges like `R$10–15` or `Dec–Feb` are fine.)
 - **Sourced + stop-slop prose.** Only claims you can ground. Assertive, concrete, plain. Banned: corporate filler, hedging, and AI tells — `it's not just X, it's Y`; `in today's fast-paced world`; `whether you're A or B`; `unlock / elevate / seamless / robust / leverage`; rule-of-three padding; needless adverbs. Write copy first-time-clean, then run the stop-slop pass in step 4, quality.
-- **Distinctive type.** Never Inter / Roboto / Arial / system fonts as a *display* face. Never converge on Space Grotesk across decks. Pair a characterful display font with a clean body font.
+- **Distinctive type.** Never Inter / Roboto / Arial / system fonts as a *display* face. Never reach for the usual AI picks (Space Grotesk, Bricolage Grotesque, Instrument Serif) unless the brand itself uses them. Client decks start from the client's own font (`references/brand-ingestion.md`). Pair a characterful display font with a clean body font.
 - **Bullets are never plain `•`.** Use an em-dash, a custom geometric marker, or a mono glyph in the deck's accent.
 
 ---

@@ -40,7 +40,7 @@ All directions obey the house rules: headline-only, no slide numbers, no colored
 
 ### Dark Tech (premium, product, confident)
 - **Scheme:** dark. Bg `#050b1f → #0a1f3d`; accent cyan/indigo (`#22D3EE` / `#6366f1`).
-- **Type:** Inter Tight / Clash display + Instrument Serif italic for `<em>` + JetBrains Mono chrome; tight display tracking (−0.045em).
+- **Type:** Inter Tight / Clash display + Newsreader italic for `<em>` + JetBrains Mono chrome; tight display tracking (−0.045em).
 - **Signature:** grid-dot texture (~1.5% opacity) + L-shaped corner lines + one off-center aurora glow.
 - **Cards:** tinted fill (#1) on dark, or glass (#3) over the glow.
 - **Atmosphere:** lit radial gradient + faint grid + grain.
@@ -48,7 +48,7 @@ All directions obey the house rules: headline-only, no slide numbers, no colored
 
 ### Warm Paper (human, friendly, hospitality)
 - **Scheme:** light, single warm ink (rust `#b53d2a`) on cream `#faf1e2`.
-- **Type:** condensed grotesk display (Bricolage / Big Shoulders) + a friendly serif/sans body; opacity-only hierarchy.
+- **Type:** condensed grotesk display (Big Shoulders Display / Barlow Condensed) + a friendly serif/sans body; opacity-only hierarchy.
 - **Signature:** **single-ink + opacity-only** system (100/78/50/32% alpha) — screen-print authority; 4px radial-dot riso paper texture.
 - **Cards:** outline only (1.5px ink), solid/dashed internal divider rhythm.
 - **Atmosphere:** the dot texture is the atmosphere.
@@ -72,7 +72,7 @@ All directions obey the house rules: headline-only, no slide numbers, no colored
 
 ### Magazine (cultural, expressive, art-direction)
 - **Scheme:** mixed tri-tone (e.g. burgundy `#7a1f35` + dusty pink `#f2b6c6` + mustard cream).
-- **Type:** grotesk display (Bricolage) with `<em>` → Instrument Serif italic. New sections are announced by a dark chapter slide (the rhythm), not by a `§` or label marker.
+- **Type:** grotesk display (Familjen Grotesk / Schibsted Grotesk) with `<em>` → an italic serif such as Newsreader. New sections are announced by a dark chapter slide (the rhythm), not by a `§` or label marker.
 - **Signature:** the `<em>` font-switch; alias-as-role discipline (≤3 hex values exposed as `--ink`/`--surface`/`--accent`).
 - **Cards:** alternating fill inversion (surface↔accent), soft-but-geometric radius.
 - **Atmosphere:** solid color-block sections; whispered low-opacity dividers.
