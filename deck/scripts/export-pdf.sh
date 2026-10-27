@@ -54,6 +54,8 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport:{ width:W, height:H } });
 await page.goto(`http://localhost:${port}/`, { waitUntil:'networkidle' });
 await page.evaluate(()=>document.fonts && document.fonts.ready);
+// Hide the deck's own controls (edit button, panel, dot nav, keyboard hint) so they stay out of the PDF.
+await page.addStyleTag({ content: '.deck-chrome,.deck-editbtn,.deck-panel,.deck-tip{display:none!important}' });
 await page.waitForTimeout(1200);
 const n = await page.evaluate(()=>document.querySelectorAll('.slide').length);
 if (!n) { console.error('No .slide elements found.'); await browser.close(); server.close(); process.exit(1); }
