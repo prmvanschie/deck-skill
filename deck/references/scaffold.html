@@ -6,8 +6,9 @@
      What's built in:
        · Fixed 1920×1080 stage, scaled to fit (letterbox) — viewport-base.css
        · Keyboard nav (← → Space PgUp/Dn Home End), dot-nav, click-advance
-       · Edit mode + design panel: swap display/body font, accent, text scale;
-         click any .ed text to edit; autosaves to localStorage; JSON export
+       · Edit mode (EDITOR block): swap display/body font, accent, text scale;
+         click any .ed text to edit; undo/redo; autosave; Save writes a
+         complete HTML file with every edit in it (Cmd/Ctrl+S)
        · Presenter mode (press S): popup with current + next slide, speaker
          notes, and a timer; stays in sync via BroadcastChannel
        · ?preview=N single-slide mode (used by presenter thumbnails)
@@ -106,18 +107,19 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
     background: rgba(138,131,122,.45); cursor: pointer; transition: all .2s; }
 .deck-chrome .dot.on { background: var(--accent); width: 9px; height: 30px; border-radius: 5px; }
 
-/* --- edit button + design panel --- */
-.deck-editbtn { position: fixed; top: 20px; right: 20px; z-index: 40; font-family: var(--font-mono);
-    font-size: 13px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; height: 40px; padding: 0 16px;
+/* ==== EDITOR CSS (start) — edit button, panel, buttons. Chrome only: never printed or exported. ==== */
+.deck-editbtn { position: fixed; top: 20px; right: 20px; z-index: 40; font-family: var(--font-body);
+    font-size: 14px; font-weight: 600; cursor: pointer; height: 40px; padding: 0 16px;
     border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink-2);
     box-shadow: 0 8px 24px -12px rgba(0,0,0,.3); }
 .deck-editbtn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .deck-panel { position: fixed; top: 0; right: 0; height: 100%; width: 300px; background: #fffdfa;
     border-left: 1px solid var(--line); transform: translateX(102%); transition: transform .35s cubic-bezier(.2,.7,.2,1);
-    z-index: 39; padding: 74px 22px 22px; overflow-y: auto; box-shadow: -30px 0 70px -42px rgba(0,0,0,.3); }
+    z-index: 39; padding: 74px 22px 22px; overflow-y: auto; box-shadow: -30px 0 70px -42px rgba(0,0,0,.3);
+    font-family: var(--font-body); }
 .deck-panel.open { transform: none; }
-.deck-panel h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--mute); margin: 22px 0 12px; } .deck-panel h4:first-child { margin-top: 0; }
+.deck-panel h4 { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--ink-2);
+    margin: 24px 0 12px; } .deck-panel h4:first-child { margin-top: 0; }
 .deck-panel .field { margin-bottom: 14px; }
 .deck-panel label { display: block; font-size: 12.5px; color: var(--ink-2); margin-bottom: 6px; }
 .deck-panel select, .deck-panel input[type=range] { width: 100%; }
@@ -126,11 +128,20 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
 .deck-swatches button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff;
     box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
 .deck-swatches button.on { box-shadow: 0 0 0 2px var(--accent); }
-.deck-pbtns { display: flex; gap: 8px; margin-top: 20px; }
-.deck-pbtns button { flex: 1; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+.deck-pbtns { display: flex; gap: 8px; margin-top: 10px; }
+.deck-pbtns button { flex: 1; font-family: var(--font-body); font-size: 13px; font-weight: 600;
     padding: 10px; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink-2); }
+.deck-pbtns button:disabled { opacity: .4; cursor: default; }
+.deck-pbtns button.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.deck-pbtns button.primary.dirty::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 8px;
+    border-radius: 50%; background: var(--accent); vertical-align: middle; }
+.deck-hint { font-size: 12px; line-height: 1.5; color: var(--mute); margin-top: 10px; }
+/* while editing, the slide shrinks to the space left of the panel */
+body.editing .deck-viewport { right: 300px; }
+body.editing .deck-chrome { right: 330px; }
+/* ==== EDITOR CSS (end) ==== */
 .deck-tip { position: fixed; left: 20px; bottom: 18px; z-index: 30; font-family: var(--font-mono);
-    font-size: 11px; letter-spacing: .06em; color: var(--mute); }
+    font-size: 11px; letter-spacing: .02em; color: var(--mute); }
 
 /* speaker notes live in the slide but never show on screen (presenter reads them) */
 .notes { display: none; }
@@ -141,6 +152,10 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
 <button class="deck-editbtn" id="deckEdit">Edit</button>
 
 <aside class="deck-panel" id="deckPanel">
+    <h4>Deck</h4>
+    <div class="deck-pbtns"><button id="deckUndo" title="Undo (Cmd/Ctrl+Z)" disabled>Undo</button><button id="deckRedo" title="Redo (Cmd/Ctrl+Shift+Z)" disabled>Redo</button></div>
+    <div class="deck-pbtns"><button id="deckSave" class="primary" title="Save as HTML file (Cmd/Ctrl+S)">Save</button><button id="deckReset" title="Throw away unsaved edits">Reset</button></div>
+    <p class="deck-hint">Save writes the whole deck, edits included, to an HTML file you can send.</p>
     <h4>Typography</h4>
     <div class="field"><label>Display font</label>
         <select id="deckFDisplay">
@@ -150,7 +165,7 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
         </select></div>
     <div class="field"><label>Body font</label>
         <select id="deckFBody">
-            <option value="'Work Sans', sans-serif">Work Sans</option>
+            <option value="'Work Sans', system-ui, sans-serif">Work Sans</option>
             <option value="'Fraunces', serif">Fraunces</option>
         </select></div>
     <div class="field"><label>Text size <span id="deckScaleVal">100%</span></label>
@@ -162,7 +177,6 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
         <button data-c="#1f7a3f" title="Green"  style="background:#1f7a3f"></button>
         <button data-c="#5b3fd1" title="Purple" style="background:#5b3fd1"></button>
     </div></div>
-    <div class="deck-pbtns"><button id="deckReset">Reset</button><button id="deckExport">Export</button></div>
 </aside>
 
 <div class="deck-viewport">
@@ -198,16 +212,37 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
 </div>
 
 <div class="deck-chrome" id="deckDots"></div>
-<div class="deck-tip">scroll or ↓ ↑ to move · <b>S</b> presenter · <b>Edit</b> to restyle</div>
+<div class="deck-tip">scroll or ↓ ↑ to move · <b>S</b> presenter · <b>Edit</b> to change</div>
 
 <script>
 (function () {
     'use strict';
     var SAVE_KEY = 'deck-REPLACE-ME-v1';            // make this deck-specific
     var DESIGN_W = 1920, DESIGN_H = 1080;
+    var root = document.documentElement;
     var stage = document.getElementById('deckStage');
-    var slides = [].slice.call(document.querySelectorAll('.slide'));
+    var slides = [], dots = [];
     var i = 0;
+
+    /* ==== EDITOR (part 1): restore autosaved edits before anything reads the slides ====
+       The deck file is the source of truth. Autosave only holds edits made on top of this
+       exact file: each Save stamps the file with a revision (data-deck-rev), and an
+       autosave from another revision is ignored, so an older copy never shows newer edits. */
+    var DESIGN_VARS = { fDisplay: '--font-display', fBody: '--font-body', accent: '--accent' };
+    function fileRev() { return stage.getAttribute('data-deck-rev') || '0'; }
+    function readDesign() {
+        var cs = getComputedStyle(root);
+        return { fDisplay: cs.getPropertyValue('--font-display').trim(),
+                 fBody: cs.getPropertyValue('--font-body').trim(),
+                 accent: cs.getPropertyValue('--accent').trim(),
+                 scale: Math.round((parseFloat(cs.getPropertyValue('--scale')) || 1) * 100) };
+    }
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) {}
+    if (!saved || saved.rev !== fileRev()) saved = null;
+    if (saved && typeof saved.html === 'string') stage.innerHTML = saved.html;
+    var design = readDesign();
+    if (saved && saved.design) design = Object.assign(design, saved.design);
 
     /* ---- preview mode (?preview=N): show one slide, no chrome, for presenter thumbs ---- */
     var previewIdx = (function () {
@@ -217,18 +252,23 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
 
     /* ---- fixed-stage scaling ---- */
     function fit() {
-        var s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+        var vp = stage.parentElement, w = vp.clientWidth || window.innerWidth, h = vp.clientHeight || window.innerHeight;
+        var s = Math.min(w / DESIGN_W, h / DESIGN_H);
         stage.style.transform = 'scale(' + s + ')';
     }
     window.addEventListener('resize', fit); fit();
 
-    /* ---- dot nav ---- */
-    var dotsWrap = document.getElementById('deckDots'), dots = [];
-    slides.forEach(function (s, idx) {
-        var b = document.createElement('button'); b.className = 'dot';
-        b.addEventListener('click', function () { go(idx, 'click'); });
-        dotsWrap.appendChild(b); dots.push(b);
-    });
+    /* ---- slides + dot nav (rebuilt whenever the editor changes the slides) ---- */
+    var dotsWrap = document.getElementById('deckDots');
+    function refreshSlides() {
+        slides = [].slice.call(stage.querySelectorAll('.slide'));
+        dotsWrap.innerHTML = ''; dots = [];
+        slides.forEach(function (s, idx) {
+            var b = document.createElement('button'); b.className = 'dot';
+            b.addEventListener('click', function () { go(idx, 'click'); });
+            dotsWrap.appendChild(b); dots.push(b);
+        });
+    }
 
     var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('deck-' + location.pathname) : null;
     function go(n, reason) {
@@ -238,9 +278,10 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
             s.classList.toggle('visible', idx === i);
         });
         dots.forEach(function (d, idx) { d.classList.toggle('on', idx === i); });
-        if (bc && reason !== 'remote') bc.postMessage({ type: 'go', idx: i });
+        if (bc && reason !== 'remote' && reason !== 'restore') bc.postMessage({ type: 'go', idx: i });
     }
     if (bc) bc.onmessage = function (e) { if (e.data && e.data.type === 'go') go(e.data.idx, 'remote'); };
+    refreshSlides();
 
     if (previewIdx !== null) {
         document.body.classList.add('deck-preview');
@@ -248,6 +289,7 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
             var on = idx === previewIdx;
             s.classList.toggle('active', on); s.classList.toggle('visible', on);
         });
+        applyDesign();
         return;                                     // preview = static single slide, no nav/edit
     }
 
@@ -255,6 +297,7 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
     document.addEventListener('keydown', function (e) {
         if (document.activeElement && document.activeElement.isContentEditable) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.target && e.target.closest && e.target.closest('.deck-panel')) return;
         var k = e.key;
         if (k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(i + 1); }
         else if (k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(i - 1); }
@@ -276,47 +319,158 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
         setTimeout(function () { wheelLock = false; }, 650);
     }, { passive: true });
 
-    /* ---- design panel + edit mode + autosave ---- */
-    var defaults = { fDisplay: getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim(),
-        fBody: getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim(),
-        scale: 100, accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), content: {} };
-    var st = Object.assign({}, defaults);
-    try { var saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved) st = Object.assign({}, defaults, saved); } catch (e) {}
-    st.content = st.content || {};
-    var root = document.documentElement;
-    function apply() {
-        root.style.setProperty('--font-display', st.fDisplay);
-        root.style.setProperty('--font-body', st.fBody);
-        root.style.setProperty('--scale', st.scale / 100);
-        root.style.setProperty('--accent', st.accent);
+    /* ==== EDITOR (part 2): design panel, text edits, undo/redo, autosave, save to file ==== */
+    var editing = false;
+    var eb = document.getElementById('deckEdit'), panel = document.getElementById('deckPanel');
+    var undoBtn = document.getElementById('deckUndo'), redoBtn = document.getElementById('deckRedo');
+    var saveBtn = document.getElementById('deckSave');
+
+    function applyDesign() {
+        root.style.setProperty('--font-display', design.fDisplay);
+        root.style.setProperty('--font-body', design.fBody);
+        root.style.setProperty('--accent', design.accent);
+        root.style.setProperty('--scale', String(design.scale / 100));
         var fd = document.getElementById('deckFDisplay'), fb = document.getElementById('deckFBody');
-        if (fd) fd.value = st.fDisplay; if (fb) fb.value = st.fBody;
-        document.getElementById('deckScale').value = st.scale;
-        document.getElementById('deckScaleVal').textContent = st.scale + '%';
-        [].forEach.call(document.querySelectorAll('#deckSwatches button'), function (b) { b.classList.toggle('on', b.dataset.c === st.accent); });
+        if (fd) fd.value = design.fDisplay; if (fb) fb.value = design.fBody;
+        var sc = document.getElementById('deckScale'); if (sc) sc.value = design.scale;
+        var sv = document.getElementById('deckScaleVal'); if (sv) sv.textContent = design.scale + '%';
+        [].forEach.call(document.querySelectorAll('#deckSwatches button'), function (b) {
+            b.classList.toggle('on', b.dataset.c.toLowerCase() === String(design.accent).toLowerCase());
+        });
     }
-    function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(st)); } catch (e) {} }
-    document.querySelectorAll('.ed').forEach(function (el) {
-        var k = el.dataset.k; if (st.content[k] != null) el.innerHTML = st.content[k];
-        el.addEventListener('input', function () { st.content[k] = el.innerHTML; save(); });
+    // the slides as they belong in the file: no edit state, no current-slide state
+    function cleanStageHTML() {
+        var c = stage.cloneNode(true);
+        [].forEach.call(c.querySelectorAll('[contenteditable]'), function (el) { el.setAttribute('contenteditable', 'false'); });
+        [].forEach.call(c.querySelectorAll('.slide'), function (el) { el.classList.remove('active', 'visible'); });
+        return c.innerHTML;
+    }
+    function setEditable(on) {
+        [].forEach.call(stage.querySelectorAll('.ed'), function (el) { el.setAttribute('contenteditable', on ? 'true' : 'false'); });
+    }
+    function autosave() {
+        try { localStorage.setItem(SAVE_KEY, JSON.stringify({ rev: fileRev(), html: cleanStageHTML(), design: design, dirty: dirty })); } catch (e) {}
+    }
+
+    // history: one entry per committed change (design pick, or a text edit on blur / after 600 ms idle)
+    var hist = [], hpos = -1, HIST_MAX = 100, dirty = false, typingTimer = null, scaleTimer = null;
+    function snapshot() { return { html: cleanStageHTML(), design: Object.assign({}, design) }; }
+    function same(a, b) { return a && b && a.html === b.html && JSON.stringify(a.design) === JSON.stringify(b.design); }
+    function updateHistoryUI() {
+        undoBtn.disabled = hpos <= 0;
+        redoBtn.disabled = hpos >= hist.length - 1;
+        saveBtn.classList.toggle('dirty', dirty);
+    }
+    function commit() {
+        clearTimeout(typingTimer); typingTimer = null; clearTimeout(scaleTimer); scaleTimer = null;
+        var s = snapshot();
+        if (same(hist[hpos], s)) return;
+        hist = hist.slice(0, hpos + 1); hist.push(s);
+        if (hist.length > HIST_MAX) hist.shift();
+        hpos = hist.length - 1; dirty = true;
+        autosave(); updateHistoryUI();
+    }
+    function restore(s) {
+        stage.innerHTML = s.html;
+        design = Object.assign({}, s.design);
+        applyDesign(); refreshSlides(); setEditable(editing); go(i, 'restore');
+        dirty = true; autosave(); updateHistoryUI();
+    }
+    function undo() { commit(); if (hpos > 0) { hpos--; restore(hist[hpos]); } }
+    function redo() { if (hpos < hist.length - 1) { hpos++; restore(hist[hpos]); } }
+
+    // text edits: delegated, so they keep working after undo/redo replaces the slides
+    stage.addEventListener('input', function (e) {
+        if (!e.target.closest || !e.target.closest('.ed')) return;
+        clearTimeout(typingTimer); typingTimer = setTimeout(commit, 600);
     });
-    apply();
-    document.getElementById('deckFDisplay').onchange = function (e) { st.fDisplay = e.target.value; apply(); save(); };
-    document.getElementById('deckFBody').onchange = function (e) { st.fBody = e.target.value; apply(); save(); };
-    document.getElementById('deckScale').oninput = function (e) { st.scale = +e.target.value; apply(); save(); };
-    document.querySelectorAll('#deckSwatches button').forEach(function (b) { b.onclick = function () { st.accent = b.dataset.c; apply(); save(); }; });
-    var editing = false, eb = document.getElementById('deckEdit'), panel = document.getElementById('deckPanel');
+    stage.addEventListener('focusout', function (e) { if (e.target.closest && e.target.closest('.ed')) commit(); });
+
+    // a pending text or slider edit is its own step: commit it before the next change starts
+    function flushPending() { if (typingTimer || scaleTimer) { clearTimeout(scaleTimer); scaleTimer = null; commit(); } }
+    function setDesign(key, val) { flushPending(); design[key] = val; applyDesign(); commit(); }
+    document.getElementById('deckFDisplay').onchange = function (e) { setDesign('fDisplay', e.target.value); };
+    document.getElementById('deckFBody').onchange = function (e) { setDesign('fBody', e.target.value); };
+    var scaleInput = document.getElementById('deckScale');
+    // dragging the slider = one change, committed when it settles
+    scaleInput.oninput = function (e) {
+        if (typingTimer) commit();
+        design.scale = +e.target.value; applyDesign();
+        clearTimeout(scaleTimer); scaleTimer = setTimeout(function () { scaleTimer = null; commit(); }, 400);
+    };
+    scaleInput.onchange = function () { clearTimeout(scaleTimer); scaleTimer = null; commit(); };
+    [].forEach.call(document.querySelectorAll('#deckSwatches button'), function (b) {
+        b.onclick = function () { setDesign('accent', b.dataset.c); };
+    });
+
     eb.onclick = function () {
         editing = !editing;
+        if (!editing) commit();
         document.body.classList.toggle('editing', editing); panel.classList.toggle('open', editing);
         eb.classList.toggle('active', editing); eb.textContent = editing ? 'Done' : 'Edit';
-        document.querySelectorAll('.ed').forEach(function (el) { el.setAttribute('contenteditable', editing ? 'true' : 'false'); });
+        setEditable(editing); fit();
     };
-    document.getElementById('deckReset').onclick = function () { if (confirm('Reset design + text edits?')) { localStorage.removeItem(SAVE_KEY); location.reload(); } };
-    document.getElementById('deckExport').onclick = function () {
-        var blob = new Blob([JSON.stringify(st, null, 2)], { type: 'application/json' });
-        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'deck-design.json'; a.click();
+    undoBtn.onclick = undo; redoBtn.onclick = redo;
+
+    // Save: the whole page as it should open next time, with every edit in it
+    var fileHandle = null;
+    function buildFile(rev) {
+        var doc = root.cloneNode(true);
+        var body = doc.querySelector('body');
+        body.classList.remove('editing', 'deck-preview');
+        doc.querySelector('#deckPanel').classList.remove('open');
+        var b = doc.querySelector('#deckEdit'); b.classList.remove('active'); b.textContent = 'Edit';
+        [].forEach.call(doc.querySelectorAll('[contenteditable]'), function (el) { el.setAttribute('contenteditable', 'false'); });
+        var st = doc.querySelector('#deckStage');
+        st.removeAttribute('style'); st.setAttribute('data-deck-rev', rev);
+        [].forEach.call(st.querySelectorAll('.slide'), function (el, idx) { el.classList.remove('visible'); el.classList.toggle('active', idx === 0); });
+        doc.querySelector('#deckDots').innerHTML = '';
+        var u = doc.querySelector('#deckUndo'), r = doc.querySelector('#deckRedo'), sv = doc.querySelector('#deckSave');
+        u.setAttribute('disabled', ''); r.setAttribute('disabled', ''); sv.classList.remove('dirty');
+        var head = '<!doctype html>\n';
+        [].forEach.call(document.childNodes, function (n) { if (n.nodeType === 8) head += '<!--' + n.data + '-->\n'; });
+        return head + doc.outerHTML + '\n';
+    }
+    function download(html, name) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+        a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    }
+    function saveFile() {
+        commit();
+        var rev = String(Date.now());
+        var html = buildFile(rev);
+        var name = decodeURIComponent(location.pathname.split('/').pop() || '') || 'deck.html';
+        function done() { stage.setAttribute('data-deck-rev', rev); dirty = false; autosave(); updateHistoryUI(); }
+        if (window.showSaveFilePicker) {
+            (fileHandle ? Promise.resolve(fileHandle) : window.showSaveFilePicker({ suggestedName: name,
+                types: [{ description: 'HTML presentation', accept: { 'text/html': ['.html'] } }] }))
+            .then(function (h) { fileHandle = h; return h.createWritable(); })
+            .then(function (w) { return w.write(html).then(function () { return w.close(); }); })
+            .then(done)
+            .catch(function (err) { if (err && err.name === 'AbortError') return; fileHandle = null; download(html, name); done(); });
+        } else { download(html, name); done(); }
+    }
+    saveBtn.onclick = saveFile;
+
+    document.getElementById('deckReset').onclick = function () {
+        if (confirm('Throw away all edits since the last save?')) { localStorage.removeItem(SAVE_KEY); location.reload(); }
     };
+
+    document.addEventListener('keydown', function (e) {
+        if (!(e.metaKey || e.ctrlKey)) return;
+        var k = e.key.toLowerCase();
+        if (k === 's') { e.preventDefault(); saveFile(); return; }
+        var inText = document.activeElement && document.activeElement.isContentEditable;
+        if (inText) return;                         // inside text, the browser's own undo applies
+        if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+        else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo(); }
+    });
+
+    applyDesign();
+    hist = [snapshot()]; hpos = 0; dirty = !!(saved && saved.dirty); updateHistoryUI();
+    /* ==== EDITOR (end of part 2) ==== */
 
     /* ---- presenter mode (S): popup with current + next slide, notes, timer ---- */
     function openPresenter() {
