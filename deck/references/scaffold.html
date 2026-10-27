@@ -133,20 +133,24 @@ body.editing .ed:focus { box-shadow: 0 0 0 2px var(--accent); }
 .deck-swatches button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff;
     box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
 .deck-swatches button.on { box-shadow: 0 0 0 2px var(--accent); }
-.deck-pbtns { display: flex; gap: 8px; margin-top: 10px; }
-.deck-pbtns button { flex: 1; font-family: var(--font-body); font-size: 13px; font-weight: 600;
-    padding: 10px; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink-2); }
-.deck-pbtns button:disabled { opacity: .4; cursor: default; }
-.deck-pbtns button.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
-.deck-pbtns button.primary.dirty::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 8px;
-    border-radius: 50%; background: var(--accent); vertical-align: middle; }
 .deck-hint { font-size: 12px; line-height: 1.5; color: var(--mute); margin-top: 10px; }
 .deck-pos { font-size: 13px; color: var(--ink-2); margin: 0 0 10px; }
-.deck-addrow { display: flex; gap: 8px; }
+.deck-tools { display: flex; gap: 5px; align-items: center; }
+.deck-ib { position: relative; flex: 0 0 auto; width: 35px; height: 35px; padding: 0; display: inline-flex;
+    align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink-2); cursor: pointer; }
+.deck-ib:not(.primary):not([aria-pressed="true"]):hover:not(:disabled) { color: var(--ink); border-color: var(--mute); }
+.deck-ib.primary:hover, .deck-ib[aria-pressed="true"]:hover { opacity: .85; }
+.deck-ib:disabled { opacity: .35; cursor: default; }
+.deck-ib.primary, .deck-ib[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.deck-ib.primary.dirty::after { content: ""; position: absolute; top: -3px; right: -3px; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px #fffdfa; }
+.deck-ib .ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round; }
+.deck-sep { width: 1px; height: 22px; background: var(--line); margin: 0 2px; }
+.deck-addrow { display: flex; gap: 8px; align-items: center; }
 .deck-addrow select { flex: 1; }
-.deck-addrow button, .deck-panel textarea { font-family: var(--font-body); }
-.deck-addrow button { font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 10px; cursor: pointer;
-    border: 1px solid var(--ink); background: var(--ink); color: #fff; }
+.deck-panel textarea { font-family: var(--font-body); }
 .deck-panel textarea { width: 100%; font-size: 13px; line-height: 1.5; padding: 8px 10px; border: 1px solid var(--line);
     border-radius: 10px; resize: vertical; background: #fff; color: var(--ink); }
 /* hidden slides: dimmed while editing, skipped in the show, left out of print and PDF */
@@ -171,16 +175,13 @@ body.editing .deck-chrome { right: 330px; }
 
 <aside class="deck-panel" id="deckPanel">
     <h4>Deck</h4>
-    <div class="deck-pbtns"><button id="deckUndo" title="Undo (Cmd/Ctrl+Z)" disabled>Undo</button><button id="deckRedo" title="Redo (Cmd/Ctrl+Shift+Z)" disabled>Redo</button></div>
-    <div class="deck-pbtns"><button id="deckSave" class="primary" title="Save as HTML file (Cmd/Ctrl+S)">Save</button><button id="deckReset" title="Throw away unsaved edits">Reset</button></div>
+    <div class="deck-tools"><button disabled id="deckUndo" class="deck-ib" title="Undo (Cmd/Ctrl+Z)" aria-label="Undo (Cmd/Ctrl+Z)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/> <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg></button><button disabled id="deckRedo" class="deck-ib" title="Redo (Cmd/Ctrl+Shift+Z)" aria-label="Redo (Cmd/Ctrl+Shift+Z)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/> <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"/></svg></button><span class="deck-sep"></span><button id="deckSave" class="deck-ib primary" title="Save as HTML file (Cmd/Ctrl+S)" aria-label="Save as HTML file (Cmd/Ctrl+S)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/> <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/> <path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg></button><button id="deckReset" class="deck-ib" title="Throw away edits since the last save" aria-label="Throw away edits since the last save"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/> <path d="M3 3v5h5"/></svg></button></div>
     <p class="deck-hint">Save writes the whole deck, edits included, to an HTML file you can send.</p>
     <h4>Slide</h4>
     <p class="deck-pos" id="deckSlidePos">Slide 1 of 1</p>
-    <div class="deck-pbtns"><button id="deckSlideUp">Move up</button><button id="deckSlideDown">Move down</button></div>
-    <div class="deck-pbtns"><button id="deckSlideDup">Duplicate</button><button id="deckSlideDel">Delete</button></div>
-    <div class="deck-pbtns"><button id="deckSlideHide">Hide</button><button id="deckSlideDark">Dark</button></div>
+    <div class="deck-tools"><button id="deckSlideUp" class="deck-ib" title="Move slide up" aria-label="Move slide up"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7"/> <path d="M12 19V5"/></svg></button><button id="deckSlideDown" class="deck-ib" title="Move slide down" aria-label="Move slide down"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/> <path d="m19 12-7 7-7-7"/></svg></button><span class="deck-sep"></span><button id="deckSlideDup" class="deck-ib" title="Duplicate slide" aria-label="Duplicate slide"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><button id="deckSlideDel" class="deck-ib" title="Delete slide" aria-label="Delete slide"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 11v6"/> <path d="M14 11v6"/> <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/> <path d="M3 6h18"/> <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button><span class="deck-sep"></span><button id="deckSlideHide" class="deck-ib" title="Hide slide" aria-label="Hide slide"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/> <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/> <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/> <path d="m2 2 20 20"/></svg></button><button id="deckSlideDark" class="deck-ib" title="Make slide dark" aria-label="Make slide dark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button></div>
     <div class="field" style="margin-top:16px"><label for="deckLayout">New slide after this one</label>
-        <div class="deck-addrow"><select id="deckLayout"></select><button id="deckSlideAdd">Add</button></div></div>
+        <div class="deck-addrow"><select id="deckLayout"></select><button id="deckSlideAdd" class="deck-ib primary" title="Add slide" aria-label="Add slide"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/> <path d="M12 5v14"/></svg></button></div></div>
     <div class="field"><label for="deckNotes">Speaker notes</label>
         <textarea id="deckNotes" rows="5" placeholder="What you say over this slide"></textarea></div>
     <h4>Typography</h4>
@@ -422,8 +423,9 @@ body.editing .deck-chrome { right: 330px; }
         document.getElementById('deckSlideUp').disabled = i === 0;
         document.getElementById('deckSlideDown').disabled = i === slides.length - 1;
         document.getElementById('deckSlideDel').disabled = slides.length < 2;
-        document.getElementById('deckSlideHide').textContent = hidden ? 'Show' : 'Hide';
-        document.getElementById('deckSlideDark').textContent = s.classList.contains('dark') ? 'Light' : 'Dark';
+        var hb = document.getElementById('deckSlideHide'), db = document.getElementById('deckSlideDark'), dark = s.classList.contains('dark');
+        hb.setAttribute('aria-pressed', String(hidden)); hb.title = hidden ? 'Show slide' : 'Hide slide'; hb.setAttribute('aria-label', hb.title);
+        db.setAttribute('aria-pressed', String(dark)); db.title = dark ? 'Make slide light' : 'Make slide dark'; db.setAttribute('aria-label', db.title);
         var nb = document.getElementById('deckNotes');
         if (nb && document.activeElement !== nb) { var n = s.querySelector('aside.notes'); nb.value = n ? n.textContent.trim() : ''; }
     }
