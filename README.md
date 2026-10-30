@@ -4,6 +4,10 @@ A Claude Code skill that builds HTML presentations without the tells of an AI-ma
 
 You know the look: a small label in spaced-out capitals above every title, every slide a grid of cards with a colored stripe on the edge, "01 / 12" in the corner. This skill bans those patterns and a list of others, so you can spend your time on what the deck says.
 
+![Three slides from a sample Twix deck built with one prompt, and the edit mode](docs/preview.jpg)
+
+*Three slides from a sample deck for Twix, built from one prompt, and the edit mode on the right.*
+
 ## What you get
 
 - **One HTML file per deck.** All CSS and JavaScript sit inline, so you can email it or open it in any browser.
